@@ -62,5 +62,5 @@ dependencies {
 
     implementation "androidx.swiperefreshlayout:swiperefreshlayout:1.1.0"
 
-    implementation 'one.credify.sdk:android-sdk:v0.2.0'
+    implementation 'one.credify.sdk:android-sdk:v0.3.0'
 }

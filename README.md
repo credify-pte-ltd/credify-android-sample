@@ -228,7 +228,110 @@ CredifySDK.instance.offerApi.showOffer(
 )
 ```
 
-#### Show Passport
+#### Show promotion offer list(available on v0.3.0)
+
+Using below method to show promotions offer list. The parameters are the same with the `CredifySDK.instance.offerApi.showOffer` except you have to pass offer list instead of an offer.
+
+```kotlin
+CredifySDK.instance.offerApi.showPromotionOffers(
+    context = // Context,
+    offers = // one.credify.sdk.core.model.Offer object,
+    userProfile = // one.credify.sdk.core.model.UserProfile object,
+    pushClaimCallback = object : CredifySDK.PushClaimCallback {
+        override fun onPushClaim(
+            credifyId: String,
+            user: UserProfile, // It's removed from version v.0.2.x
+            resultCallback: CredifySDK.PushClaimResultCallback
+        ) {
+            // Code for pushing claims, you need to call your API to do this task.
+            // After pushing claims, you have to notify to Credify SDK. For example:
+            resultCallback.onPushClaimResult(
+                isSuccess = [true if success. Otherwise, pass false]
+            )
+        }
+    },
+    offerPageCallback = object : CredifySDK.OfferPageCallback {
+        override fun onClose(status: RedemptionResult) {
+            // There are three status
+            // - COMPLETED: the user redeemed offer successfully and the offer transaction status is COMPLETED.
+            // - PENDING:   the user redeemed offer successfully and the offer transaction status is PENDING.
+            // - CANCELED:  the user redeemed offer successfully and he canceled this offer afterwords OR he clicked 
+            //              on the back button in any screens in the offer redemption flow.
+        }
+
+        override fun onOpenUrl(url: String) {
+        }
+    }
+)
+```
+
+
+#### Setting language
+
+- It's available from version `v0.1.16`.
+- Using `CredifySDK.instance.setLanguage(language: String)` to setup the language that will be used for the localization in the SDK.
+
+### BNPL usage
+
+#### Check BNPL availability
+
+Using `getBNPLAvailability` to check BNPL availability.
+
+```kotlin
+CredifySDK.instance.bnplApi.getBNPLAvailability(userProfile = user)
+    .observeOn(AndroidSchedulers.mainThread())
+    .subscribe(
+        { bnplInfo ->
+            // Success case
+        },
+        {
+            // Error case
+        }
+    )
+    
+/**
+ * [isAvailable]: true, there is available BNPL for the user
+ * [credifyId]: if it has value that means the user has created account before
+ */
+class BNPLInfo(val isAvailable: Boolean, val credifyId: String?)    
+```
+
+> **Important**: You need to keep `credifyId` on your side for using later.
+
+#### Show BNPL(available v0.2.0)
+
+If there is availability BNPL for the user you should use `CredifySDK.instance.bnplApi.showBNPL` to start the BNPL flow.
+
+```kotlin
+CredifySDK.instance.bnplApi.showBNPL(
+    context = this@BNPLConsumerActivity,
+    userProfile = user,
+    orderInfo = orderInfo,
+    pushClaimCallback = object : CredifySDK.PushClaimCallback {
+        override fun onPushClaim(
+            credifyId: String,
+            resultCallback: CredifySDK.PushClaimResultCallback
+        ) {
+            // Code for pushing claims, you need to call your API to do this task.
+            // After pushing claims, you have to notify to Credify SDK. For example:
+            resultCallback.onPushClaimResult(
+                isSuccess = [true if success. Otherwise, pass false]
+            )
+        }
+    },
+    bnplPageCallback = object : CredifySDK.BNPLPageCallback {
+        override fun onClose(
+            status: RedemptionResult,
+            orderId: String,
+            isPaymentCompleted: Boolean
+        ) {
+            // Receive the result and update on your side if needed
+        }
+    }
+)
+```
+
+### Show Passport
 
 Using the below code for showing the **Passport web app**. This page will show all the offers which the user has redeemed.
 
@@ -292,10 +395,27 @@ CredifySDK.instance.passportApi.showPassport(
 )
 ```
 
-#### Setting language
+### Show the Service detail
 
-- It's available from version `v0.1.16`.
-- Using `CredifySDK.instance.setLanguage(language: String)` to setup the language that will be used for the localization in the SDK.
+Using the below code for showing the **Service detail page**. It will show all the BNPL details which the user has used.
+
+```kotlin
+CredifySDK.instance.passportApi.showServiceInstance(
+    context = // Context,
+    userProfile = // one.credify.sdk.core.model.UserProfile object,
+    marketId = // Your orgnization id that you have registered with Credify,
+    productTypeList = // Product type list,
+    callback = object : CredifySDK.PageCallback {
+        override fun onClose() {
+            // The page is showing on the UI
+        }
+
+        override fun onShow() {
+            // The page is closed
+        }
+    }
+)
+```
 
 ### Customize theme
 
@@ -484,6 +604,10 @@ class ServiceXThemeConfig(
 #### CredifyError class
 
 - Using `one.credify.sdk.core.model.CredifyError` instead of `one.credify.sdk.core.CredifyError`
+
+#### ImageHelper class
+
+- The `ImageHelper` class was removed too. If you still want to use this helper. You can use [Glide](https://github.com/bumptech/glide) or use a helper class in this example app(`one.credify.sdk.sample.screen.helper.ImageHelper`).
 
 #### UserName class
 
